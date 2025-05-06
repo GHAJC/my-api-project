@@ -1,18 +1,20 @@
 const axios = require('axios');
 
 module.exports = async (req, res) => {
-  // ✅ Add CORS headers
+  // ✅ Handle CORS preflight
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') {
-  return res.status(200).end();
+    return res.status(200).end(); // 👈 Preflight success
   }
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // ✅ Continue with the existing logic
   const {
     ProductID,
     ProductName,
@@ -37,7 +39,9 @@ module.exports = async (req, res) => {
     });
 
     const fileData = getFile.data;
-    const currentProducts = JSON.parse(Buffer.from(fileData.content, 'base64').toString('utf8'));
+    const currentProducts = JSON.parse(
+      Buffer.from(fileData.content, 'base64').toString('utf8')
+    );
 
     const product = {
       ProductID: ProductID || String(Date.now()),
