@@ -1,17 +1,16 @@
 import axios from 'axios';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Origin', 'https://thefrozenshopfront.w3spaces-preview.com/');
-res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
 if (req.method === 'OPTIONS') {
-return res.status(200).end(); // Preflight response
+  return res.status(200).end(); // Preflight response
 }
 
 if (req.method !== 'POST') {
-return res.status(405).json({ error: 'Method Not Allowed' });
+  return res.status(405).json({ error: 'Method Not Allowed' });
 }
 
 const { ProductID, ProductName, ProductDescrip, ProductPrice, ProductQuantity } = req.body;
