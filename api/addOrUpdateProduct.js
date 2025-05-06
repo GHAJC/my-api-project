@@ -1,13 +1,17 @@
 const axios = require('axios');
 
 module.exports = async (req, res) => {
-  const {
-    ProductID, // Optional — if present, we’ll edit
-    ProductName,
-    ProductDescrip,
-    ProductPrice,
-    ProductQuantity
-  } = req.body;
+if (!req.body) {
+  return res.status(400).json({ error: 'Missing request body' });
+}
+
+const {
+  ProductID,
+  ProductName,
+  ProductDescrip,
+  ProductPrice,
+  ProductQuantity
+} = req.body;
 
   const token = process.env.GITHUB_TOKEN; // Set this in your Vercel project
   const owner = 'GHAJC';
