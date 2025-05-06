@@ -38,6 +38,7 @@ res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     const fileData = getFile.data;
     const currentProducts = JSON.parse(Buffer.from(fileData.content, 'base64').toString('utf8'));
+    const sha = fileData.sha;
 
     const product = {
       ProductID: ProductID || String(Date.now()),
