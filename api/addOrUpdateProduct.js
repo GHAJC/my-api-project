@@ -5,17 +5,13 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  if (!req.body) {
-  return res.status(400).json({ error: 'Missing request body' });
-}
-
-const {
-  ProductID,
-  ProductName,
-  ProductDescrip,
-  ProductPrice,
-  ProductQuantity
-} = req.body;
+  const {
+    ProductID,
+    ProductName,
+    ProductDescrip,
+    ProductPrice,
+    ProductQuantity
+  } = req.body;
   console.log("📥 Incoming request body:", req.body);
 
   const token = process.env.GITHUB_TOKEN;
