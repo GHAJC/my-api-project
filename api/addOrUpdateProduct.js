@@ -1,17 +1,22 @@
 import axios from 'axios';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Allows all origins
-   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allowed HTTP methods
-   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // Handle CORS
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return res.status(200).end();
+  }
 
-if (req.method === 'OPTIONS') {
-  return res.status(200).end(); // Preflight response
-}
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-if (req.method !== 'POST') {
-  return res.status(405).json({ error: 'Method Not Allowed' });
-}
+  // Only allow POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
 
 const { ProductID, ProductName, ProductDescrip, ProductPrice, ProductQuantity } = req.body;
 console.log("📥 Incoming request body:", req.body);
