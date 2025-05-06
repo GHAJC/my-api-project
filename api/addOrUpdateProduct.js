@@ -6,17 +6,16 @@ module.exports = async (req, res) => {
   }
 
   if (!req.body) {
-    return res.status(400).json({ error: 'Missing request body' });
-  }
+  return res.status(400).json({ error: 'Missing request body' });
+}
 
-  const {
-    ProductID,
-    ProductName,
-    ProductDescrip,
-    ProductPrice,
-    ProductQuantity
-  } = req.body;
-
+const {
+  ProductID,
+  ProductName,
+  ProductDescrip,
+  ProductPrice,
+  ProductQuantity
+} = req.body;
   console.log("📥 Incoming request body:", req.body);
 
   const token = process.env.GITHUB_TOKEN;
