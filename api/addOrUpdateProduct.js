@@ -1,16 +1,17 @@
 const axios = require('axios');
 
 module.exports = async (req, res) => {
-  // Allow CORS for all origins or specify a particular origin
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Allows all origins
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allowed HTTP methods
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allowed headers
+  // 🔒 CORS HEADERS
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Replace * with your domain for better security
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  // Handle preflight request (OPTIONS)
+  // 🔁 Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    return res.status(200).end(); // Respond with status 200 for preflight requests
+    return res.status(200).end();
   }
 
+  // ❌ Block anything not POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -22,7 +23,7 @@ module.exports = async (req, res) => {
     ProductPrice,
     ProductQuantity
   } = req.body;
-  
+
   console.log("📥 Incoming request body:", req.body);
 
   const token = process.env.GITHUB_TOKEN;
@@ -30,10 +31,11 @@ module.exports = async (req, res) => {
   const repo = 'OnlineStoreJSONFiles';
   const filePath = 'data/products.json';
   const branch = 'main';
+
   const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
 
   try {
-    // Fetch existing file from GitHub
+    // 📄 GET existing content
     const getFile = await axios.get(apiUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -42,15 +44,9 @@ module.exports = async (req, res) => {
     });
 
     const fileData = getFile.data;
+    const currentProducts = JSON.parse(Buffer.from(fileData.content, 'base64').toString('utf8'));
 
-    console.log("📄 File retrieved from GitHub");
-    console.log("🔑 SHA:", fileData.sha);
-
-    const currentProducts = JSON.parse(
-      Buffer.from(fileData.content, 'base64').toString('utf8')
-    );
-
-    // Prepare product
+    // ➕ New or Update
     const product = {
       ProductID: ProductID || String(Date.now()),
       ProductName,
@@ -59,24 +55,18 @@ module.exports = async (req, res) => {
       ProductQuantity
     };
 
-    // Add or update
     const index = currentProducts.products.findIndex(p => p.ProductID === product.ProductID);
     if (index >= 0) {
       currentProducts.products[index] = product;
-      console.log("🛠️ Updating product:", product.ProductID);
     } else {
       currentProducts.products.push(product);
-      console.log("➕ Adding new product:", product.ProductID);
     }
 
-    // Encode new content
     const updatedContent = Buffer.from(JSON.stringify(currentProducts, null, 2)).toString('base64');
 
-    // Put request to GitHub
-    const updateResponse = await axios.put(apiUrl, {
-      message: index >= 0
-        ? `Update product ${product.ProductID}`
-        : 'Add new product',
+    // ✅ PUT update
+    await axios.put(apiUrl, {
+      message: index >= 0 ? `Update product ${product.ProductID}` : `Add product ${product.ProductID}`,
       content: updatedContent,
       sha: fileData.sha,
       branch
@@ -87,19 +77,13 @@ module.exports = async (req, res) => {
       }
     });
 
-    console.log("✅ GitHub file updated successfully");
-    res.status(200).json({
-      message: index >= 0 ? 'Product updated' : 'Product added',
-      product
-    });
+    res.status(200).json({ message: 'Product saved', product });
 
   } catch (error) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.message || error.message;
-    console.error("❌ GitHub API error:", message);
-    res.status(status).json({
-      error: 'Failed to update GitHub file',
-      details: message
+    console.error('❌ GitHub Error:', error.response?.data || error.message);
+    res.status(500).json({
+      error: 'Failed to update GitHub',
+      details: error.response?.data || error.message
     });
   }
 };
