@@ -1,29 +1,19 @@
-const axios = require('axios');
+import axios from 'axios';
 
-module.exports = async (req, res) => {
-  // 🔒 CORS HEADERS
-  res.setHeader('Access-Control-Allow-Origin', 'https://thefrozenshopfront.w3spaces-preview.com'); // Replace * with your domain for better security
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  // 🔁 Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    return res.status(200).end(); // Preflight response
   }
 
-  // ❌ Block anything not POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const {
-    ProductID,
-    ProductName,
-    ProductDescrip,
-    ProductPrice,
-    ProductQuantity
-  } = req.body;
-
+  const { ProductID, ProductName, ProductDescrip, ProductPrice, ProductQuantity } = req.body;
   console.log("📥 Incoming request body:", req.body);
 
   const token = process.env.GITHUB_TOKEN;
@@ -35,7 +25,6 @@ module.exports = async (req, res) => {
   const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
 
   try {
-    // 📄 GET existing content
     const getFile = await axios.get(apiUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -46,7 +35,6 @@ module.exports = async (req, res) => {
     const fileData = getFile.data;
     const currentProducts = JSON.parse(Buffer.from(fileData.content, 'base64').toString('utf8'));
 
-    // ➕ New or Update
     const product = {
       ProductID: ProductID || String(Date.now()),
       ProductName,
@@ -64,7 +52,6 @@ module.exports = async (req, res) => {
 
     const updatedContent = Buffer.from(JSON.stringify(currentProducts, null, 2)).toString('base64');
 
-    // ✅ PUT update
     await axios.put(apiUrl, {
       message: index >= 0 ? `Update product ${product.ProductID}` : `Add product ${product.ProductID}`,
       content: updatedContent,
@@ -86,4 +73,4 @@ module.exports = async (req, res) => {
       details: error.response?.data || error.message
     });
   }
-};
+}
