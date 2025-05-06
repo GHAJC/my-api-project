@@ -2,7 +2,7 @@ const axios = require('axios');
 
 module.exports = async (req, res) => {
   // 🔒 CORS HEADERS
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Replace * with your domain for better security
+  res.setHeader('Access-Control-Allow-Origin', 'https://thefrozenshopfront.w3spaces-preview.com'); // Replace * with your domain for better security
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
