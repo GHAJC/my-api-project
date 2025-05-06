@@ -1,20 +1,20 @@
 const axios = require('axios');
 
 module.exports = async (req, res) => {
-  // ✅ Handle CORS preflight
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // Allow CORS for all origins or specify a particular origin
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Allows all origins
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allowed HTTP methods
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allowed headers
 
+  // Handle preflight request (OPTIONS)
   if (req.method === 'OPTIONS') {
-    return res.status(200).end(); // 👈 Preflight success
+    return res.status(200).end(); // Respond with status 200 for preflight requests
   }
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // ✅ Continue with the existing logic
   const {
     ProductID,
     ProductName,
@@ -22,6 +22,8 @@ module.exports = async (req, res) => {
     ProductPrice,
     ProductQuantity
   } = req.body;
+  
+  console.log("📥 Incoming request body:", req.body);
 
   const token = process.env.GITHUB_TOKEN;
   const owner = 'GHAJC';
@@ -31,6 +33,7 @@ module.exports = async (req, res) => {
   const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
 
   try {
+    // Fetch existing file from GitHub
     const getFile = await axios.get(apiUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -39,10 +42,15 @@ module.exports = async (req, res) => {
     });
 
     const fileData = getFile.data;
+
+    console.log("📄 File retrieved from GitHub");
+    console.log("🔑 SHA:", fileData.sha);
+
     const currentProducts = JSON.parse(
       Buffer.from(fileData.content, 'base64').toString('utf8')
     );
 
+    // Prepare product
     const product = {
       ProductID: ProductID || String(Date.now()),
       ProductName,
@@ -51,17 +59,24 @@ module.exports = async (req, res) => {
       ProductQuantity
     };
 
+    // Add or update
     const index = currentProducts.products.findIndex(p => p.ProductID === product.ProductID);
     if (index >= 0) {
       currentProducts.products[index] = product;
+      console.log("🛠️ Updating product:", product.ProductID);
     } else {
       currentProducts.products.push(product);
+      console.log("➕ Adding new product:", product.ProductID);
     }
 
+    // Encode new content
     const updatedContent = Buffer.from(JSON.stringify(currentProducts, null, 2)).toString('base64');
 
-    await axios.put(apiUrl, {
-      message: index >= 0 ? `Update product ${product.ProductID}` : 'Add new product',
+    // Put request to GitHub
+    const updateResponse = await axios.put(apiUrl, {
+      message: index >= 0
+        ? `Update product ${product.ProductID}`
+        : 'Add new product',
       content: updatedContent,
       sha: fileData.sha,
       branch
@@ -72,6 +87,7 @@ module.exports = async (req, res) => {
       }
     });
 
+    console.log("✅ GitHub file updated successfully");
     res.status(200).json({
       message: index >= 0 ? 'Product updated' : 'Product added',
       product
