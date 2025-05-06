@@ -1,6 +1,10 @@
 const axios = require('axios');
 
 module.exports = async (req, res) => {
+  res.status(200).json({ message: 'API is working' });
+};
+
+module.exports = async (req, res) => {
   const {
     ProductID, // Optional — if present, we’ll edit
     ProductName,
